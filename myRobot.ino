@@ -213,11 +213,11 @@ void moveCar(byte* payload, unsigned int length)
         break;
     }
   }
-  /*
+  
     log("speed: %u\n", motorSpeed);
     log("dist: %u\n", maxDist2Wall);
     log("delay: %u\n", fsmDelay);
-  */
+  
 }
 // Handles message arrived on subscribed topic(s)
 void callback(char* topic, byte* payload, unsigned int length)
