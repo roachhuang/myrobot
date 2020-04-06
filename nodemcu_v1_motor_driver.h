@@ -32,18 +32,17 @@ class Motor : public MotorDriver {
     }
 
     void setSpeed(int speed) {
+      // fuck! don't know why this line is a must for running in mqtt callback func. it took me forever to debug
+      pinMode(dir, OUTPUT);
       currentSpeed = speed;
-      //if (speed == 0) {
-      //  analogWrite(pwm, speed * 4); // speed: 0~255, PWMA: 0~1023
-      //}
+      // speed: 0~255, PWMA: 0~1023
+
       if (speed >= 0) {
-        digitalWrite(dir, HIGH);
-        // analogWrite(pwm, speed * 4);
+        digitalWrite(dir, HIGH);        
       }
       else {
         digitalWrite(dir, LOW);
-        // log("negtive");
-        // analogWrite(pwm, -speed * 4); // 負負得正
+        log("negtive");        
       }
       analogWrite(pwm, abs(speed) * 4);
     }
@@ -59,4 +58,3 @@ class Motor : public MotorDriver {
     int currentSpeed;
 };
 };
-

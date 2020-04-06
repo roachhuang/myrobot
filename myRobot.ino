@@ -30,9 +30,6 @@ PubSubClient client(espClient);
   #endif
 */
 
-// Functions
-void callback(char *topic, byte *payload, unsigned int length);
-
 // enable one of the motor shields below
 //#define ENABLE_ADAFRUIT_MOTOR_DRIVER
 #ifdef ENABLE_ADAFRUIT_MOTOR_DRIVER
@@ -44,8 +41,10 @@ void callback(char *topic, byte *payload, unsigned int length);
 #define ENABLE_NODEMCU_V1_MOTOR_DRIVER
 #ifdef ENABLE_NODEMCU_V1_MOTOR_DRIVER
 #include "nodemcu_v1_motor_driver.h"
-#define LEFT_MOTOR_INIT D1, D3  // A+ and A- pwm:D1, direction: D3
-#define RIGHT_MOTOR_INIT D2, D4 // B+ and B-
+// #define LEFT_MOTOR_INIT D1, D3  // A+ and A- pwm:D1, direction: D3
+// #define RIGHT_MOTOR_INIT D2, D4 // B+ and B-
+#define LEFT_MOTOR_INIT 4, 2  // A+ and A- pwm:D1, direction: D3
+#define RIGHT_MOTOR_INIT 5, 0 // B+ and B-
 #endif
 
 #include "nodemcu_ultrasonic_sensor.h"
@@ -53,6 +52,7 @@ const int trigPin = D6; //D4
 const int echoPin = D8; //D3
 #define MAX_DISTANCE 200
 Roach::DistanceSensor dSensor(trigPin, echoPin, MAX_DISTANCE);
+//Define motors PIN (NodeMCU Motors shield)
 
 const uint8_t MIN_SPEED = 00;  // no less than 30%
 const uint8_t MAX_SPEED = 255; // no greater than 50%
@@ -68,6 +68,10 @@ unsigned long startTime;
 #define irRight D7 // A2
 
 // Declare functions to be exposed to the API
+/*
+  void moveCar(byte *, unsigned int );
+  void callback(char *topic, byte *payload, unsigned int length);
+*/
 void stop(void);
 void forward(void);
 void left(void);
@@ -75,17 +79,17 @@ void right(void);
 void backward(void);
 
 bool selfDriving = false; // default manual mode
-uint8_t motorSpeed = 150;
+int motorSpeed = 150;
 uint8_t maxDist2Wall = 8; // 3cm.
-uint8_t fsmDelay = 300;        // default 20ms
+int fsmDelay = 50;        // default 20ms
 
 enum state_t
 {
   // S,  // bug - to be fixed coz fms[4] has 5 state but i just put 4 states
   F,
-  B,
   L,
-  R
+  R,
+  B
 };
 state_t s;
 // Linked data structure
@@ -123,24 +127,29 @@ uint8_t irSensorInput()
   return irL1 << 2 | center << 1 | irR1;
   //return digitalRead(irLeft) << 2 | center << 1 | digitalRead(irRight);
 }
+// Functions to control the robot
 
-// Functions
-void callback(char *topic, byte *payload, unsigned int length);
 
 void reconnect() {
+  String mac, topic, topicLevel0 = "moveCar";
+  uint32_t chipId;
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "roachClient-";
-    clientId += String(random(0xffff), HEX);
+    // String clientId = "roachClient-";
+    // clientId += String(random(0xffff), HEX);
+    chipId = ESP.getChipId();
+    mac = String(chipId);
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(mac.c_str()), "roach", "0206@tw") {
       Serial.println("connected");
-      // Once connected, publish an announcement...
-      // client.publish("outTopic", "hello world");
-      // ... and resubscribe
-      client.subscribe("moveCar");
+      // Once connected, publish an announcement, and resubscribe
+      client.publish("devId", mac.c_str());
+      topic = topicLevel0 + '/' + mac;
+      Serial.println(topic);
+      client.subscribe(topic.c_str());
+      // return client.connected();
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -151,12 +160,84 @@ void reconnect() {
   }
 }
 
+void moveCar(byte* payload, unsigned int length)
+{
+  uint8_t params[length], i = 0, from = 0, idx = 0;
+  uint8_t direction = 0;
+  String command;
+  // convert byte (unsidned char) to String
+  // String command((const __FlashStringHelper*) payload);
+  //parsing payload from array to String
+  for (int i = 0; i < length; i++) {
+    //Serial.print((char)payload[i]);
+    command += (char)payload[i];
+  }
+  // 3 input params
+  Serial.println("Robot params");
+  idx = command.indexOf(",");
+  for (i = 0; i < length; i++)
+  {
+    params[i] = command.substring(from, idx).toInt();
+    from = idx + 1;
+    idx = command.indexOf(",", from);
+  }
+
+  motorSpeed = params[0];
+  maxDist2Wall = params[1];
+  // fsmDelay = params[2];
+  direction = params[2];
+  selfDriving = params[3];
+  if (selfDriving == false)
+  {
+    log("dir: %u\n", direction);
+    switch (direction)
+    {
+      case 0:
+        stop();
+        break;
+      case 1:
+        forward();
+        break;
+      case 2:
+        backward();
+        break;
+      case 3:
+        left();
+        break;
+      case 4:
+        right();
+        break;
+
+      default:
+        stop();
+        break;
+    }
+  }
+  /*
+    log("speed: %u\n", motorSpeed);
+    log("dist: %u\n", maxDist2Wall);
+    log("delay: %u\n", fsmDelay);
+  */
+}
+// Handles message arrived on subscribed topic(s)
+void callback(char* topic, byte* payload, unsigned int length)
+{
+  log("Message arrived [");
+  log(topic);
+  log("] ");
+
+  // Handle
+  moveCar(payload, length);
+}
+
 void setup()
 {
   const char* mqtt_server = "ajoan.com";
   const int mqtt_port = 1883;
 
+  // prepare Motor Output Pins
   Serial.begin(115200); // set up Serial library at 115200 bps
+
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
@@ -226,104 +307,37 @@ void loop()
   client.loop();
 }
 
-// Handles message arrived on subscribed topic(s)
-void callback(char *topic, byte *payload, unsigned int length)
+void forward(void)
 {
-  log("Message arrived [");
-  log(topic);
-  log("] ");
-  for (int i = 0; i < length; i++) {
-    log((char)payload[i]);
-  }
-  // Handle
-  moveCar(payload, length);
-}
-
-// Functions to control the robot
-// int forward(String command) {
-void forward()
-{
-  // log("motorSpeed: %u\n", motorSpeed);
+  log("motorSpeed: %u\n", motorSpeed);
   log("forward");
   rightMotor.setSpeed(motorSpeed);
   leftMotor.setSpeed(motorSpeed + 10);
 }
-void backward()
+void backward(void)
 {
   log("backward");
   rightMotor.setSpeed(-motorSpeed);
   leftMotor.setSpeed(-motorSpeed);
 }
 // coz i'm lazy to change wiring
-void right()
+void right(void)
 {
-  log("left");
+  log("right");
   rightMotor.setSpeed(motorSpeed);
   leftMotor.setSpeed(-motorSpeed);
   //leftMotor.setSpeed(-FIX_SPEED);
 }
-void left()
+void left(void)
 {
-  log("right");
+  log("left");
   rightMotor.setSpeed(-motorSpeed);
   leftMotor.setSpeed(motorSpeed);
   // rightMotor.setSpeed(MIN_SPEED);
 }
-void stop()
+void stop(void)
 {
   // log(command);
   rightMotor.setSpeed(0);
   leftMotor.setSpeed(0);
-}
-
-void moveCar(byte * payload, unsigned int length)
-{
-  int params[length], i = 0, from = 0, idx = 0;
-  int direction = 0;
-  // convert byte (unsidned char) to String
-  String command((const __FlashStringHelper*) payload);
-  // 3 input params
-  Serial.println("Robot params");
-  idx = command.indexOf(",");
-  for (i = 0; i < length; i++)
-  {
-    params[i] = command.substring(from, idx).toInt();
-    from = idx + 1;
-    idx = command.indexOf(",", from);
-  }
-
-  motorSpeed = params[0];
-  maxDist2Wall = params[1];
-  // fsmDelay = params[2];
-  direction = params[2];
-  selfDriving = params[3];
-  if (selfDriving == false)
-  {
-    log("dir: %u\n", direction);
-    switch (direction)
-    {
-      case 0:
-        stop();
-        break;
-      case 1:
-        forward();
-        break;
-      case 3:
-        right();
-        break;
-      case 2:
-        left();
-        break;
-      case 4:
-        backward();
-        break;
-      default:
-        stop();
-        break;
-    }
-  }
-
-  log("speed: %u\n", motorSpeed);
-  log("dist: %u\n", maxDist2Wall);
-  log("delay: %u\n", fsmDelay);
 }
