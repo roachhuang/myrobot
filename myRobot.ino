@@ -1,5 +1,5 @@
 
-#define LOGGING
+// #define LOGGING
 // has to be included on 1st line
 #include "logging.h"
 
@@ -17,9 +17,8 @@ const int mqtt_port = 1883;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-
 /* we use wifimanager to connect to any available wifi
-  // #define CLSA
+  #define CLSA
   // WiFi parameters
   #ifdef CLSA
   const char *ssid = "CLSA";
@@ -135,7 +134,7 @@ void reconnect() {
   uint32_t chipId;
   // Loop until we're reconnected
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    log("Attempting MQTT connection...");
     // Create a random client ID
     // String clientId = "roachClient-";
     // clientId += String(random(0xffff), HEX);
@@ -143,12 +142,12 @@ void reconnect() {
     mac = String(chipId);
     // Attempt to connect
     if (client.connect(mac.c_str()), "roach", "0206@tw") {
-      Serial.println("connected");
+      log("connected");
       // Once connected, publish an announcement, and resubscribe
       client.publish("devId", mac.c_str());
       topic = topicLevel0 + '/' + mac;
-      Serial.println(topic);
-      client.subscribe(topic.c_str());
+      // log(topic);
+      client.subscribe(topic.c_str(), 1); // qos=1
       // return client.connected();
     } else {
       Serial.print("failed, rc=");
@@ -173,7 +172,7 @@ void moveCar(byte* payload, unsigned int length)
     command += (char)payload[i];
   }
   // 3 input params
-  Serial.println("Robot params");
+  log("Robot params");
   idx = command.indexOf(",");
   for (i = 0; i < length; i++)
   {
@@ -213,11 +212,11 @@ void moveCar(byte* payload, unsigned int length)
         break;
     }
   }
-  
-    log("speed: %u\n", motorSpeed);
-    log("dist: %u\n", maxDist2Wall);
-    log("delay: %u\n", fsmDelay);
-  
+
+  log("speed: %u\n", motorSpeed);
+  log("dist: %u\n", maxDist2Wall);
+  log("delay: %u\n", fsmDelay);
+
 }
 // Handles message arrived on subscribed topic(s)
 void callback(char* topic, byte* payload, unsigned int length)
@@ -236,7 +235,16 @@ void setup()
   const int mqtt_port = 1883;
 
   // prepare Motor Output Pins
-  Serial.begin(115200); // set up Serial library at 115200 bps
+  Serial.begin(500000); // set up Serial library at 115200 bps
+  /* Connect to WiFi
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.println(".");
+    }
+    Serial.println("");
+    Serial.println("WiFi connected");
+  */
 
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -290,6 +298,7 @@ void loop()
   if (!client.connected()) {
     reconnect();
   }
+  client.loop();
 
   if (selfDriving == true)
   {
@@ -304,7 +313,8 @@ void loop()
       startTime = currentTime;
     }
   }
-  client.loop();
+
+  delay(10);
 }
 
 void forward(void)
@@ -324,15 +334,15 @@ void backward(void)
 void right(void)
 {
   log("right");
-  rightMotor.setSpeed(motorSpeed);
-  leftMotor.setSpeed(-motorSpeed);
+  rightMotor.setSpeed(motorSpeed * 0.8);  // make it turns slowly
+  leftMotor.setSpeed(-motorSpeed * 0.8);
   //leftMotor.setSpeed(-FIX_SPEED);
 }
 void left(void)
 {
   log("left");
-  rightMotor.setSpeed(-motorSpeed);
-  leftMotor.setSpeed(motorSpeed);
+  rightMotor.setSpeed(-motorSpeed * 0.8);
+  leftMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   // rightMotor.setSpeed(MIN_SPEED);
 }
 void stop(void)
