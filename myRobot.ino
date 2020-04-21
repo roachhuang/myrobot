@@ -144,10 +144,11 @@ void reconnect() {
     if (client.connect(mac.c_str()), "roach", "0206@tw") {
       log("connected");
       // Once connected, publish an announcement, and resubscribe
-      client.publish("devId", mac.c_str());
-      topic = topicLevel0 + '/' + mac;
+      // client.publish("devId", mac.c_str());
+      // topic = topicLevel0 + '/' + mac;
       // log(topic);
-      client.subscribe(topic.c_str(), 1); // qos=1
+      // client.subscribe(topic.c_str(), 1); // qos=1
+      client.subscribe('action', 1); // qos=1
       // return client.connected();
     } else {
       Serial.print("failed, rc=");
@@ -221,12 +222,41 @@ void moveCar(byte* payload, unsigned int length)
 // Handles message arrived on subscribed topic(s)
 void callback(char* topic, byte* payload, unsigned int length)
 {
+  uint8_t direction = 0;
+   String command;
   log("Message arrived [");
   log(topic);
   log("] ");
+  for (int i = 0; i < length; i++) {
+    //Serial.print((char)payload[i]);
+    command += (char)payload[i];
+  }
+  direction = command.toInt();
 
   // Handle
-  moveCar(payload, length);
+  // moveCar(payload, length);
+    switch (direction)
+    {
+      case 0:
+        stop();
+        break;
+      case 1:
+        forward();
+        break;
+      case 2:
+        backward();
+        break;
+      case 3:
+        left();
+        break;
+      case 4:
+        right();
+        break;
+
+      default:
+        stop();
+        break;
+    }
 }
 
 void setup()
