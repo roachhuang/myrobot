@@ -49,7 +49,7 @@ PubSubClient client(espClient);
 #include "nodemcu_ultrasonic_sensor.h"
 const int trigPin = D6; //D4
 const int echoPin = D8; //D3
-#define MAX_DISTANCE 200
+#define MAX_DISTANCE 100
 Roach::DistanceSensor dSensor(trigPin, echoPin, MAX_DISTANCE);
 //Define motors PIN (NodeMCU Motors shield)
 
@@ -236,16 +236,7 @@ void setup()
 
   // prepare Motor Output Pins
   Serial.begin(500000); // set up Serial library at 115200 bps
-  /* Connect to WiFi
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.println(".");
-    }
-    Serial.println("");
-    Serial.println("WiFi connected");
-  */
-
+  
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
@@ -313,20 +304,21 @@ void loop()
       startTime = currentTime;
     }
   }
-
   delay(10);
 }
 
 void forward(void)
 {
   log("motorSpeed: %u\n", motorSpeed);
-  log("forward");
+  log("forward");  
   rightMotor.setSpeed(motorSpeed);
   leftMotor.setSpeed(motorSpeed + 10);
+  client.publish("action", 1);
 }
 void backward(void)
 {
   log("backward");
+  client.publish("action", 2);
   rightMotor.setSpeed(-motorSpeed);
   leftMotor.setSpeed(-motorSpeed);
 }
@@ -336,6 +328,7 @@ void right(void)
   log("right");
   rightMotor.setSpeed(motorSpeed * 0.8);  // make it turns slowly
   leftMotor.setSpeed(-motorSpeed * 0.8);
+  client.publish("action", 4);
   //leftMotor.setSpeed(-FIX_SPEED);
 }
 void left(void)
@@ -344,10 +337,12 @@ void left(void)
   rightMotor.setSpeed(-motorSpeed * 0.8);
   leftMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   // rightMotor.setSpeed(MIN_SPEED);
+  client.publish("action", 3);
 }
 void stop(void)
 {
   // log(command);
+  client.publish("action", 0);
   rightMotor.setSpeed(0);
   leftMotor.setSpeed(0);
 }
