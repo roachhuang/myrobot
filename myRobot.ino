@@ -13,21 +13,16 @@
 
 const char* mqtt_server = "ajoan.com";
 const int mqtt_port = 1883;
+
+// Declare functions to be exposed to the API
+
+void moveCar(byte *, unsigned int );
+void callback(char *topic, byte *payload, unsigned int length);
+
 // Clients
 WiFiClient espClient;
-PubSubClient client(espClient);
-
-/* we use wifimanager to connect to any available wifi
-  #define CLSA
-  // WiFi parameters
-  #ifdef CLSA
-  const char *ssid = "CLSA";
-  const char *password = "1234Abcd";
-  #else
-  const char *ssid = "c1225";
-  const char *password = "c0918321359";
-  #endif
-*/
+// PubSubClient client(espClient);
+PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
 
 // enable one of the motor shields below
 //#define ENABLE_ADAFRUIT_MOTOR_DRIVER
@@ -66,11 +61,6 @@ unsigned long startTime;
 #define irLeft D5  // A0
 #define irRight D7 // A2
 
-// Declare functions to be exposed to the API
-/*
-  void moveCar(byte *, unsigned int );
-  void callback(char *topic, byte *payload, unsigned int length);
-*/
 void stop(void);
 void forward(void);
 void left(void);
@@ -127,8 +117,7 @@ uint8_t irSensorInput()
   //return digitalRead(irLeft) << 2 | center << 1 | digitalRead(irRight);
 }
 // Functions to control the robot
-
-
+/*
 void reconnect() {
   String mac, topic, topicLevel0 = "moveCar";
   uint32_t chipId;
@@ -148,7 +137,7 @@ void reconnect() {
       // topic = topicLevel0 + '/' + mac;
       // log(topic);
       // client.subscribe(topic.c_str(), 1); // qos=1
-      client.subscribe('action', 1); // qos=1
+      client.subscribe("action", 1); // qos=1
       // return client.connected();
     } else {
       Serial.print("failed, rc=");
@@ -219,11 +208,13 @@ void moveCar(byte* payload, unsigned int length)
   log("delay: %u\n", fsmDelay);
 
 }
+*/
+
 // Handles message arrived on subscribed topic(s)
 void callback(char* topic, byte* payload, unsigned int length)
 {
   uint8_t direction = 0;
-   String command;
+  String command;
   log("Message arrived [");
   log(topic);
   log("] ");
@@ -235,46 +226,39 @@ void callback(char* topic, byte* payload, unsigned int length)
 
   // Handle
   // moveCar(payload, length);
-    switch (direction)
-    {
-      case 0:
-        stop();
-        break;
-      case 1:
-        forward();
-        break;
-      case 2:
-        backward();
-        break;
-      case 3:
-        left();
-        break;
-      case 4:
-        right();
-        break;
+  switch (direction)
+  {
+    case 0:
+      stop();
+      break;
+    case 1:
+      forward();
+      break;
+    case 2:
+      backward();
+      break;
+    case 3:
+      left();
+      break;
+    case 4:
+      right();
+      break;
 
-      default:
-        stop();
-        break;
-    }
+    default:
+      stop();
+      break;
+  }
 }
 
 void setup()
 {
   const char* mqtt_server = "ajoan.com";
   const int mqtt_port = 1883;
-
+  String mac, topic, topicLevel0 = "moveCar";
+  uint32_t chipId;
+  
   // prepare Motor Output Pins
   Serial.begin(115200); // set up Serial library at 115200 bps
-  /* Connect to WiFi
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.println(".");
-    }
-    Serial.println("");
-    Serial.println("WiFi connected");
-  */
 
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -310,8 +294,15 @@ void setup()
   pinMode(irRight, INPUT);
 
   // Set callback
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
+  chipId = ESP.getChipId();
+  mac = String(chipId);
+  if (client.connect(mac.c_str()), "roach", "0206@tw") {
+    log("mqtt connected");
+    client.publish("outTopic", "i'm the follower");
+    client.subscribe("action");
+  }
+  // client.setServer(mqtt_server, mqtt_port);
+  // client.setCallback(callback);
 
   //log("ip addr: %u\n", WiFi.localIP());
 
@@ -324,10 +315,12 @@ void loop()
   uint8_t input;
   unsigned long currentTime = millis();
   unsigned long elapsedTime = currentTime - startTime;
-
+/*
   if (!client.connected()) {
-    reconnect();
+    //reconnect();
+    log("disconnected!!!");
   }
+*/  
   client.loop();
 
   if (selfDriving == true)
@@ -343,8 +336,7 @@ void loop()
       startTime = currentTime;
     }
   }
-
-  delay(10);
+  // delay(10);
 }
 
 void forward(void)
