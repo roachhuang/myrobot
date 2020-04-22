@@ -11,11 +11,13 @@
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>
 
+void callback(char* topic, byte* payload, unsigned int length);
+
 const char* mqtt_server = "ajoan.com";
 const int mqtt_port = 1883;
 // Clients
 WiFiClient espClient;
-PubSubClient client(espClient);
+PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
 
 /* we use wifimanager to connect to any available wifi
   #define CLSA
@@ -128,7 +130,7 @@ uint8_t irSensorInput()
 }
 // Functions to control the robot
 
-
+/*
 void reconnect() {
   String mac, topic, topicLevel0 = "moveCar";
   uint32_t chipId;
@@ -158,6 +160,7 @@ void reconnect() {
     }
   }
 }
+*/
 
 void moveCar(byte* payload, unsigned int length)
 {
@@ -233,10 +236,12 @@ void setup()
 {
   const char* mqtt_server = "ajoan.com";
   const int mqtt_port = 1883;
+  String mac, topic, topicLevel0 = "moveCar";
+  uint32_t chipId;
 
   // prepare Motor Output Pins
   Serial.begin(115200); // set up Serial library at 115200 bps
-  
+
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
@@ -271,9 +276,21 @@ void setup()
   pinMode(irRight, INPUT);
 
   // Set callback
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
-
+  chipId = ESP.getChipId();
+  mac = String(chipId);
+  log(mac.c_str());
+  // Attempt to connect
+  if (client.connect(mac.c_str()), "roach", "10206@tw") {
+    log("mqtt connected");
+    // Once connected, publish an announcement, and resubscribe
+    client.publish("devId", mac.c_str());
+    topic = topicLevel0 + '/' + mac;
+    // log(topic);
+    client.subscribe(topic.c_str(), 1); // qos=1
+    // return client.connected();
+    // client.setServer(mqtt_server, mqtt_port);
+    // client.setCallback(callback);
+  }
   //log("ip addr: %u\n", WiFi.localIP());
 
   s = F; // state initialization
@@ -285,10 +302,11 @@ void loop()
   uint8_t input;
   unsigned long currentTime = millis();
   unsigned long elapsedTime = currentTime - startTime;
-
+/*
   if (!client.connected()) {
     reconnect();
   }
+*/  
   client.loop();
 
   if (selfDriving == true)
@@ -304,13 +322,13 @@ void loop()
       startTime = currentTime;
     }
   }
-  delay(10);
+  // delay(10);
 }
 
 void forward(void)
 {
   log("motorSpeed: %u\n", motorSpeed);
-  log("forward");  
+  log("forward");
   rightMotor.setSpeed(motorSpeed);
   leftMotor.setSpeed(motorSpeed + 10);
   client.publish("action", "1");
