@@ -1,5 +1,5 @@
 
-// #define LOGGING
+#define LOGGING
 // has to be included on 1st line
 #include "logging.h"
 
@@ -235,7 +235,7 @@ void setup()
   const int mqtt_port = 1883;
 
   // prepare Motor Output Pins
-  Serial.begin(500000); // set up Serial library at 115200 bps
+  Serial.begin(115200); // set up Serial library at 115200 bps
   
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
