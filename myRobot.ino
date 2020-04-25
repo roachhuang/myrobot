@@ -306,7 +306,7 @@ void loop()
   if (!client.connected()) {
     reconnect();
   }
-*/  
+*/
   client.loop();
 
   if (selfDriving == true)
@@ -327,40 +327,45 @@ void loop()
 
 void forward(void)
 {
+  char s[3];
   log("motorSpeed: %u\n", motorSpeed);
   log("forward");
   rightMotor.setSpeed(motorSpeed);
   leftMotor.setSpeed(motorSpeed + 10);
-  client.publish("action", "1");
+  client.publish("action", sprintf(s, "%d", motorSpeed)+",1");
 }
 void backward(void)
 {
+  char s[3];
   log("backward");
-  client.publish("action", "2");
+  client.publish("action", sprintf(s, "%d", motorSpeed)+",2");
   rightMotor.setSpeed(-motorSpeed);
   leftMotor.setSpeed(-motorSpeed);
 }
 // coz i'm lazy to change wiring
 void right(void)
 {
+  char s[3];
   log("right");
   rightMotor.setSpeed(motorSpeed * 0.8);  // make it turns slowly
   leftMotor.setSpeed(-motorSpeed * 0.8);
-  client.publish("action", "4");
+  client.publish("action", sprintf(s, "%d", motorSpeed)+",4");
   //leftMotor.setSpeed(-FIX_SPEED);
 }
 void left(void)
 {
+  char s[3];
   log("left");
   rightMotor.setSpeed(-motorSpeed * 0.8);
   leftMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   // rightMotor.setSpeed(MIN_SPEED);
-  client.publish("action", "3");
+  client.publish("action", sprintf(s, "%d", motorSpeed)+",3");
 }
 void stop(void)
 {
+  char s[3];
   // log(command);
-  client.publish("action", "0");
+  client.publish("action", sprintf(s, "%d", motorSpeed)+",0");
   rightMotor.setSpeed(0);
   leftMotor.setSpeed(0);
 }
