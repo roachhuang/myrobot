@@ -1,16 +1,4 @@
-/**
-   @file adafruit_motor_driver.h
-   @brief Motor device driver for the Adafruit motor shield.
-   @author Miguel Grinberg
-*/
-
-/**
- * @file adafruit_motor_driver.h
- * @brief Motor device driver for the Adafruit motor shield.
- * @author Miguel Grinberg
- */
-/*
-#include <AFMotor.h>
+#include <L298N.h>
 #include "motor_driver.h"
 
 namespace Roach
@@ -18,9 +6,8 @@ namespace Roach
     class Motor : public MotorDriver
     {
     public:
-       
-        Motor(int number)
-            :MotorDriver(), motor(number), currentSpeed(0)
+        Motor(uint8_t EN, uint8_t IN1, uint8_t IN2)
+            :MotorDriver(), motor(EN, IN1, IN2), currentSpeed(0)
         {
         }
 
@@ -28,27 +15,28 @@ namespace Roach
         {
             currentSpeed = speed;
             if (speed == 0){
-              motor.run(RELEASE);
+              motor.stop();
             }
             else if (speed > 0) {
                 motor.setSpeed(speed);
-                motor.run(FORWARD);
+                motor.forward();
             }
             else {
                 motor.setSpeed(-speed);
-                motor.run(BACKWARD);
+                motor.backward();
             }
         }
-        
+
         int getSpeed() const
         {
             return currentSpeed;
         }
-        
+
     private:
-        AF_DCMotor motor;
+        // uint8_t EN;
+        // unit8_t IN1;
+        // uint8_t IN2;
+        L298N motor;
         int currentSpeed;
     };
 };
-
-*/

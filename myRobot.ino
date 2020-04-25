@@ -27,12 +27,21 @@ PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
 // enable one of the motor shields below
 //#define ENABLE_ADAFRUIT_MOTOR_DRIVER
 #ifdef ENABLE_ADAFRUIT_MOTOR_DRIVER
-#include "adafruit_motor_driver.h"
+// #include "adafruit_motor_driver.h"
 #define LEFT_MOTOR_INIT 3 // M3 and M4
 #define RIGHT_MOTOR_INIT 4
 #endif
 
-#define ENABLE_NODEMCU_V1_MOTOR_DRIVER
+#define ENABLE_L298N_MOTOR_DRIVER
+#ifdef ENABLE_L298N_MOTOR_DRIVER
+#include "l298n_motor_driver.h"
+// #define LEFT_MOTOR_INIT D1, D3  // A+ and A- pwm:D1, direction: D3
+// #define RIGHT_MOTOR_INIT D2, D4 // B+ and B-
+#define LEFT_MOTOR_INIT D3, D1, D2  // A+ and A- pwm:D1, direction: D3
+#define RIGHT_MOTOR_INIT D5, D6, D7 // B+ and B-
+#endif
+
+// #define ENABLE_NODEMCU_V1_MOTOR_DRIVER
 #ifdef ENABLE_NODEMCU_V1_MOTOR_DRIVER
 #include "nodemcu_v1_motor_driver.h"
 // #define LEFT_MOTOR_INIT D1, D3  // A+ and A- pwm:D1, direction: D3
@@ -256,7 +265,7 @@ void setup()
   const int mqtt_port = 1883;
   String mac, topic, topicLevel0 = "moveCar";
   uint32_t chipId;
-  
+
   // prepare Motor Output Pins
   Serial.begin(115200); // set up Serial library at 115200 bps
 
@@ -312,6 +321,10 @@ void setup()
 
 void loop()
 {
+  forward();
+  delay(2000);
+  stop();
+  delay(2000);
   uint8_t input;
   unsigned long currentTime = millis();
   unsigned long elapsedTime = currentTime - startTime;
@@ -320,7 +333,7 @@ void loop()
     //reconnect();
     log("disconnected!!!");
   }
-*/  
+*/
   client.loop();
 
   if (selfDriving == true)
