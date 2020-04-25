@@ -222,12 +222,12 @@ void moveCar(byte* payload, unsigned int length)
 // Handles message arrived on subscribed topic(s)
 void callback(char* topic, byte* payload, unsigned int length)
 {
-  uint8_t params[length], direction = 0;
+  uint8_t params[length], direction = 0, from =0, idx=0,  i;
   String command;
   log("Message arrived [");
   log(topic);
   log("] ");
-  for (int i = 0; i < length; i++) {
+  for (i = 0; i < length; i++) {
     //Serial.print((char)payload[i]);
     command += (char)payload[i];
   }
@@ -241,9 +241,10 @@ void callback(char* topic, byte* payload, unsigned int length)
     idx = command.indexOf(",", from);
   }
 
-  motorSpeed = params[0];
-  direction = params[1];
-
+  direction = params[0];    
+  //log("speed: %d\n", motorSpeed);
+  // direction = params[1];
+  log("dir: %d\n", direction);
   // Handle
   // moveCar(payload, length);
   switch (direction)
@@ -332,10 +333,10 @@ void setup()
 
 void loop()
 {
-  forward();
-  delay(2000);
-  stop();
-  delay(2000);
+  //forward();
+  //delay(2000);
+  //stop();
+  //delay(2000);
   uint8_t input;
   unsigned long currentTime = millis();
   unsigned long elapsedTime = currentTime - startTime;
