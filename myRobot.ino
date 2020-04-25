@@ -222,7 +222,7 @@ void moveCar(byte* payload, unsigned int length)
 // Handles message arrived on subscribed topic(s)
 void callback(char* topic, byte* payload, unsigned int length)
 {
-  uint8_t direction = 0;
+  uint8_t params[length], direction = 0;
   String command;
   log("Message arrived [");
   log(topic);
@@ -231,7 +231,18 @@ void callback(char* topic, byte* payload, unsigned int length)
     //Serial.print((char)payload[i]);
     command += (char)payload[i];
   }
-  direction = command.toInt();
+   // 2 input params
+  // log("Robot params");
+  idx = command.indexOf(",");
+  for (i = 0; i < length; i++)
+  {
+    params[i] = command.substring(from, idx).toInt();
+    from = idx + 1;
+    idx = command.indexOf(",", from);
+  }
+
+  motorSpeed = params[0];
+  direction = params[1];
 
   // Handle
   // moveCar(payload, length);
