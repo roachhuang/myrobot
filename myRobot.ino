@@ -332,13 +332,13 @@ void forward(void)
   log("forward");
   rightMotor.setSpeed(motorSpeed);
   leftMotor.setSpeed(motorSpeed + 10);
-  client.publish("action", sprintf(s, "%d", motorSpeed)+",1");
+  client.publish("action", "1");
 }
 void backward(void)
 {
   char s[3];
   log("backward");
-  client.publish("action", sprintf(s, "%d", motorSpeed)+",2");
+  client.publish("action", "2");
   rightMotor.setSpeed(-motorSpeed);
   leftMotor.setSpeed(-motorSpeed);
 }
@@ -349,7 +349,7 @@ void right(void)
   log("right");
   rightMotor.setSpeed(motorSpeed * 0.8);  // make it turns slowly
   leftMotor.setSpeed(-motorSpeed * 0.8);
-  client.publish("action", sprintf(s, "%d", motorSpeed)+",4");
+  client.publish("action", "4");
   //leftMotor.setSpeed(-FIX_SPEED);
 }
 void left(void)
@@ -359,13 +359,13 @@ void left(void)
   rightMotor.setSpeed(-motorSpeed * 0.8);
   leftMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   // rightMotor.setSpeed(MIN_SPEED);
-  client.publish("action", sprintf(s, "%d", motorSpeed)+",3");
+  client.publish("action", "3");
 }
 void stop(void)
 {
   char s[3];
   // log(command);
-  client.publish("action", sprintf(s, "%d", motorSpeed)+",0");
+  client.publish("action", "0");
   rightMotor.setSpeed(0);
   leftMotor.setSpeed(0);
 }
