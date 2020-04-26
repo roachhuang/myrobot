@@ -77,7 +77,7 @@ void right(void);
 void backward(void);
 
 bool selfDriving = false; // default manual mode
-int motorSpeed = 150;
+int motorSpeed = MAX_SPEED;
 uint8_t maxDist2Wall = 8; // 3cm.
 int fsmDelay = 50;        // default 20ms
 
@@ -241,9 +241,9 @@ void callback(char* topic, byte* payload, unsigned int length)
     idx = command.indexOf(",", from);
   }
 
-  direction = params[0];    
-  //log("speed: %d\n", motorSpeed);
-  // direction = params[1];
+  motorSpeed = params[0];
+  log("speed: %d\n", motorSpeed);
+  direction = params[1];
   log("dir: %d\n", direction);
   // Handle
   // moveCar(payload, length);
