@@ -11,9 +11,9 @@
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>
 
-void callback(char* topic, byte* payload, unsigned int length);
+void callback(char *topic, byte *payload, unsigned int length);
 
-const char* mqtt_server = "ajoan.com";
+const char *mqtt_server = "ajoan.com";
 const int mqtt_port = 1883;
 // Clients
 WiFiClient espClient;
@@ -104,13 +104,12 @@ struct State
 typedef const struct State StateType;
 typedef StateType *StatePtr;
 StateType fsm[4] = {
-  {&forward, fsmDelay, {B, B, R, L, B, B, R, F}}, // Center
-  {&left, fsmDelay, {B, B, L, F, B, B, R, F}},    // off to the Left
-  {&right, fsmDelay, {B, B, R, L, B, B, F, F}},   // off to the Right state, we need to turn left
-  // {&backward, random(fsmDelay * 3, fsmDelay * 4), {B, B, L, L, B, B, R, R}}
-  // {&stop, fsmDelay, {S,S,S,S,S,S,S,S}}
-  {&backward, 60, {B, B, L, L, B, B, R, R}}
-};
+    {&forward, fsmDelay, {B, B, R, L, B, B, R, F}}, // Center
+    {&left, fsmDelay, {B, B, L, F, B, B, R, F}},    // off to the Left
+    {&right, fsmDelay, {B, B, R, L, B, B, F, F}},   // off to the Right state, we need to turn left
+    // {&backward, random(fsmDelay * 3, fsmDelay * 4), {B, B, L, L, B, B, R, R}}
+    // {&stop, fsmDelay, {S,S,S,S,S,S,S,S}}
+    {&backward, 60, {B, B, L, L, B, B, R, R}}};
 
 uint8_t irSensorInput()
 {
@@ -162,7 +161,7 @@ void reconnect() {
 }
 */
 
-void moveCar(byte* payload, unsigned int length)
+void moveCar(byte *payload, unsigned int length)
 {
   uint8_t params[length], i = 0, from = 0, idx = 0;
   uint8_t direction = 0;
@@ -170,7 +169,8 @@ void moveCar(byte* payload, unsigned int length)
   // convert byte (unsidned char) to String
   // String command((const __FlashStringHelper*) payload);
   //parsing payload from array to String
-  for (int i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++)
+  {
     //Serial.print((char)payload[i]);
     command += (char)payload[i];
   }
@@ -194,35 +194,34 @@ void moveCar(byte* payload, unsigned int length)
     log("dir: %u\n", direction);
     switch (direction)
     {
-      case 0:
-        stop();
-        break;
-      case 1:
-        forward();
-        break;
-      case 2:
-        backward();
-        break;
-      case 3:
-        left();
-        break;
-      case 4:
-        right();
-        break;
+    case 0:
+      stop();
+      break;
+    case 1:
+      forward();
+      break;
+    case 2:
+      backward();
+      break;
+    case 3:
+      left();
+      break;
+    case 4:
+      right();
+      break;
 
-      default:
-        stop();
-        break;
+    default:
+      stop();
+      break;
     }
   }
 
   log("speed: %u\n", motorSpeed);
   log("dist: %u\n", maxDist2Wall);
   log("delay: %u\n", fsmDelay);
-
 }
 // Handles message arrived on subscribed topic(s)
-void callback(char* topic, byte* payload, unsigned int length)
+void callback(char *topic, byte *payload, unsigned int length)
 {
   log("Message arrived [");
   log(topic);
@@ -234,7 +233,7 @@ void callback(char* topic, byte* payload, unsigned int length)
 
 void setup()
 {
-  const char* mqtt_server = "ajoan.com";
+  const char *mqtt_server = "ajoan.com";
   const int mqtt_port = 1883;
   String mac, topic, topicLevel0 = "moveCar";
   uint32_t chipId;
@@ -280,7 +279,8 @@ void setup()
   mac = String(chipId);
   log(mac.c_str());
   // Attempt to connect
-  if (client.connect(mac.c_str()), "roach", "10206@tw") {
+  if (client.connect(mac.c_str()), "roach", "10206@tw")
+  {
     log("mqtt connected");
     // Once connected, publish an announcement, and resubscribe
     client.publish("devId", mac.c_str());
@@ -302,7 +302,7 @@ void loop()
   uint8_t input;
   unsigned long currentTime = millis();
   unsigned long elapsedTime = currentTime - startTime;
-/*
+  /*
   if (!client.connected()) {
     reconnect();
   }
@@ -327,16 +327,17 @@ void loop()
 
 void forward(void)
 {
-  char s[3];
+  String s;
+  s = String(motorSpeed, DEC);
   log("motorSpeed: %u\n", motorSpeed);
   log("forward");
   rightMotor.setSpeed(motorSpeed);
   leftMotor.setSpeed(motorSpeed + 10);
-  client.publish("action", "1");
+  client.publish("action", s + ",1");
 }
 void backward(void)
 {
-  char s[3];
+  String s;
   log("backward");
   client.publish("action", "2");
   rightMotor.setSpeed(-motorSpeed);
@@ -345,27 +346,27 @@ void backward(void)
 // coz i'm lazy to change wiring
 void right(void)
 {
-  char s[3];
+  String s;
   log("right");
-  rightMotor.setSpeed(motorSpeed * 0.8);  // make it turns slowly
+  rightMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   leftMotor.setSpeed(-motorSpeed * 0.8);
-  client.publish("action", "4");
+  client.publish("action", s+",4");
   //leftMotor.setSpeed(-FIX_SPEED);
 }
 void left(void)
 {
-  char s[3];
+  String s;
   log("left");
   rightMotor.setSpeed(-motorSpeed * 0.8);
   leftMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   // rightMotor.setSpeed(MIN_SPEED);
-  client.publish("action", "3");
+  client.publish("action", s+",3");
 }
 void stop(void)
 {
-  char s[3];
+  String s;
   // log(command);
-  client.publish("action", "0");
+  client.publish("action", s+",0");
   rightMotor.setSpeed(0);
   leftMotor.setSpeed(0);
 }
