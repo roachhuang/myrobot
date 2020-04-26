@@ -328,18 +328,21 @@ void loop()
 void forward(void)
 {
   String s;
-  s = String(motorSpeed, DEC);
+  s = String(motorSpeed, DEC)+",1";
+  
   log("motorSpeed: %u\n", motorSpeed);
   log("forward");
   rightMotor.setSpeed(motorSpeed);
   leftMotor.setSpeed(motorSpeed + 10);
-  client.publish("action", s + ",1");
+  client.publish("action", s.c_str());
 }
 void backward(void)
 {
   String s;
+  s = String(motorSpeed, DEC)+",2";
+  
   log("backward");
-  client.publish("action", "2");
+  client.publish("action", s.c_str());
   rightMotor.setSpeed(-motorSpeed);
   leftMotor.setSpeed(-motorSpeed);
 }
@@ -347,26 +350,31 @@ void backward(void)
 void right(void)
 {
   String s;
+  s = String(motorSpeed, DEC)+",4";
+  
   log("right");
   rightMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   leftMotor.setSpeed(-motorSpeed * 0.8);
-  client.publish("action", s+",4");
+  client.publish("action", s.c_str());
   //leftMotor.setSpeed(-FIX_SPEED);
 }
 void left(void)
 {
   String s;
+  s = String(motorSpeed, DEC)+",1";
+  
   log("left");
   rightMotor.setSpeed(-motorSpeed * 0.8);
   leftMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   // rightMotor.setSpeed(MIN_SPEED);
-  client.publish("action", s+",3");
+  client.publish("action", s.c_str());
 }
 void stop(void)
 {
   String s;
+  s = String(motorSpeed, DEC)+",0";
   // log(command);
-  client.publish("action", s+",0");
+  client.publish("action",s.c_str());
   rightMotor.setSpeed(0);
   leftMotor.setSpeed(0);
 }
