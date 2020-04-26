@@ -32,7 +32,7 @@ PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
 #define RIGHT_MOTOR_INIT 4
 #endif
 
-#define ENABLE_L298N_MOTOR_DRIVER
+// #define ENABLE_L298N_MOTOR_DRIVER
 #ifdef ENABLE_L298N_MOTOR_DRIVER
 #include "l298n_motor_driver.h"
 // #define LEFT_MOTOR_INIT D1, D3  // A+ and A- pwm:D1, direction: D3
@@ -41,7 +41,7 @@ PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
 #define RIGHT_MOTOR_INIT D5, D6, D7 // B+ and B-
 #endif
 
-// #define ENABLE_NODEMCU_V1_MOTOR_DRIVER
+#define ENABLE_NODEMCU_V1_MOTOR_DRIVER
 #ifdef ENABLE_NODEMCU_V1_MOTOR_DRIVER
 #include "nodemcu_v1_motor_driver.h"
 // #define LEFT_MOTOR_INIT D1, D3  // A+ and A- pwm:D1, direction: D3
