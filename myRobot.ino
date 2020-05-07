@@ -11,24 +11,6 @@
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>
 
-const char* mqtt_server = "ajoan.com";
-const int mqtt_port = 1883;
-// Clients
-WiFiClient espClient;
-PubSubClient client(espClient);
-
-/* we use wifimanager to connect to any available wifi
-  #define CLSA
-  // WiFi parameters
-  #ifdef CLSA
-  const char *ssid = "CLSA";
-  const char *password = "1234Abcd";
-  #else
-  const char *ssid = "c1225";
-  const char *password = "c0918321359";
-  #endif
-*/
-
 // enable one of the motor shields below
 //#define ENABLE_ADAFRUIT_MOTOR_DRIVER
 #ifdef ENABLE_ADAFRUIT_MOTOR_DRIVER
@@ -102,13 +84,12 @@ struct State
 typedef const struct State StateType;
 typedef StateType *StatePtr;
 StateType fsm[4] = {
-  {&forward, fsmDelay, {B, B, R, L, B, B, R, F}}, // Center
-  {&left, fsmDelay, {B, B, L, F, B, B, R, F}},    // off to the Left
-  {&right, fsmDelay, {B, B, R, L, B, B, F, F}},   // off to the Right state, we need to turn left
-  // {&backward, random(fsmDelay * 3, fsmDelay * 4), {B, B, L, L, B, B, R, R}}
-  // {&stop, fsmDelay, {S,S,S,S,S,S,S,S}}
-  {&backward, 60, {B, B, L, L, B, B, R, R}}
-};
+    {&forward, fsmDelay, {B, B, R, L, B, B, R, F}}, // Center
+    {&left, fsmDelay, {B, B, L, F, B, B, R, F}},    // off to the Left
+    {&right, fsmDelay, {B, B, R, L, B, B, F, F}},   // off to the Right state, we need to turn left
+    // {&backward, random(fsmDelay * 3, fsmDelay * 4), {B, B, L, L, B, B, R, R}}
+    // {&stop, fsmDelay, {S,S,S,S,S,S,S,S}}
+    {&backward, 60, {B, B, L, L, B, B, R, R}}};
 
 uint8_t irSensorInput()
 {
@@ -126,40 +107,9 @@ uint8_t irSensorInput()
   return irL1 << 2 | center << 1 | irR1;
   //return digitalRead(irLeft) << 2 | center << 1 | digitalRead(irRight);
 }
+
 // Functions to control the robot
-
-
-void reconnect() {
-  String mac, topic, topicLevel0 = "moveCar";
-  uint32_t chipId;
-  // Loop until we're reconnected
-  while (!client.connected()) {
-    log("Attempting MQTT connection...");
-    // Create a random client ID
-    // String clientId = "roachClient-";
-    // clientId += String(random(0xffff), HEX);
-    chipId = ESP.getChipId();
-    mac = String(chipId);
-    // Attempt to connect
-    if (client.connect(mac.c_str()), "roach", "0206@tw") {
-      log("connected");
-      // Once connected, publish an announcement, and resubscribe
-      client.publish("devId", mac.c_str());
-      topic = topicLevel0 + '/' + mac;
-      // log(topic);
-      client.subscribe(topic.c_str(), 1); // qos=1
-      // return client.connected();
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-}
-
-void moveCar(byte* payload, unsigned int length)
+void moveCar(byte *payload, unsigned int length)
 {
   uint8_t params[length], i = 0, from = 0, idx = 0;
   uint8_t direction = 0;
@@ -167,7 +117,8 @@ void moveCar(byte* payload, unsigned int length)
   // convert byte (unsidned char) to String
   // String command((const __FlashStringHelper*) payload);
   //parsing payload from array to String
-  for (int i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++)
+  {
     //Serial.print((char)payload[i]);
     command += (char)payload[i];
   }
@@ -191,35 +142,34 @@ void moveCar(byte* payload, unsigned int length)
     log("dir: %u\n", direction);
     switch (direction)
     {
-      case 0:
-        stop();
-        break;
-      case 1:
-        forward();
-        break;
-      case 2:
-        backward();
-        break;
-      case 3:
-        left();
-        break;
-      case 4:
-        right();
-        break;
+    case 0:
+      stop();
+      break;
+    case 1:
+      forward();
+      break;
+    case 2:
+      backward();
+      break;
+    case 3:
+      left();
+      break;
+    case 4:
+      right();
+      break;
 
-      default:
-        stop();
-        break;
+    default:
+      stop();
+      break;
     }
   }
 
   log("speed: %u\n", motorSpeed);
   log("dist: %u\n", maxDist2Wall);
   log("delay: %u\n", fsmDelay);
-
 }
 // Handles message arrived on subscribed topic(s)
-void callback(char* topic, byte* payload, unsigned int length)
+void callback(char *topic, byte *payload, unsigned int length)
 {
   log("Message arrived [");
   log(topic);
@@ -229,22 +179,18 @@ void callback(char* topic, byte* payload, unsigned int length)
   moveCar(payload, length);
 }
 
+const char *mqtt_server = "ajoan.com";
+const int mqtt_port = 1883;
+// Clients
+WiFiClient espClient;
+PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
+
 void setup()
 {
-  const char* mqtt_server = "ajoan.com";
-  const int mqtt_port = 1883;
-
+  String mac, topic, topicLevel0 = "moveCar";
+  uint32_t chipId;
   // prepare Motor Output Pins
   Serial.begin(500000); // set up Serial library at 115200 bps
-  /* Connect to WiFi
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.println(".");
-    }
-    Serial.println("");
-    Serial.println("WiFi connected");
-  */
 
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -253,8 +199,7 @@ void setup()
   // wifiManager.resetSettings();
 
   //sets timeout until configuration portal gets turned off
-  //useful to make it all retry or go to sleep
-  //in seconds
+  //useful to make it all retry or go to sleep in seconds
   wifiManager.setTimeout(180);
 
   //or use this for auto generated name ESP + ChipID
@@ -271,17 +216,31 @@ void setup()
     delay(5000);
   }
   //if you get here you have connected to the WiFi
-  log("connected...yeey :)");
+  log("wifi connected...yeey :)");
 
+  chipId = ESP.getChipId();
+  mac = String(chipId);
+  // Attempt to connect
+  if (client.connect(mac.c_str()), "roach", "0206@tw")
+  {
+    log("MQTT connected");
+    // Once connected, publish an announcement, and resubscribe
+    client.publish("devId", mac.c_str());
+    topic = topicLevel0 + '/' + mac;
+    // log(topic);
+    client.subscribe(topic.c_str(), 1); // qos=1
+    // return client.connected();
+  }
+  else
+  {
+    Serial.print("mqtt connection failed, rc=");
+    Serial.print(client.state());
+  }
   // auto mode
   pinMode(irLeft, INPUT);
   // LED_BULLTIN is D0
   pinMode(LED_BUILTIN, INPUT);
   pinMode(irRight, INPUT);
-
-  // Set callback
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
 
   //log("ip addr: %u\n", WiFi.localIP());
 
@@ -295,9 +254,6 @@ void loop()
   unsigned long currentTime = millis();
   unsigned long elapsedTime = currentTime - startTime;
 
-  if (!client.connected()) {
-    reconnect();
-  }
   client.loop();
 
   if (selfDriving == true)
@@ -334,7 +290,7 @@ void backward(void)
 void right(void)
 {
   log("right");
-  rightMotor.setSpeed(motorSpeed * 0.8);  // make it turns slowly
+  rightMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   leftMotor.setSpeed(-motorSpeed * 0.8);
   //leftMotor.setSpeed(-FIX_SPEED);
 }
