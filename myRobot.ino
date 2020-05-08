@@ -1,5 +1,5 @@
 
-// #define LOGGING
+#define LOGGING
 // has to be included on 1st line
 #include "logging.h"
 
@@ -49,10 +49,9 @@ unsigned long startTime;
 #define irRight D7 // A2
 
 // Declare functions to be exposed to the API
-/*
   void moveCar(byte *, unsigned int );
   void callback(char *topic, byte *payload, unsigned int length);
-*/
+
 void stop(void);
 void forward(void);
 void left(void);
@@ -220,8 +219,9 @@ void setup()
 
   chipId = ESP.getChipId();
   mac = String(chipId);
+  log("chipId: %s", mac.c_str());
   // Attempt to connect
-  if (client.connect(mac.c_str()), "roach", "0206@tw")
+  if (client.connect(mac.c_str(), "roach", "0206@tw"))
   {
     log("MQTT connected");
     // Once connected, publish an announcement, and resubscribe
@@ -229,6 +229,7 @@ void setup()
     topic = topicLevel0 + '/' + mac;
     // log(topic);
     client.subscribe(topic.c_str(), 1); // qos=1
+    log("sub to %s", topic.c_str());
     // return client.connected();
   }
   else
