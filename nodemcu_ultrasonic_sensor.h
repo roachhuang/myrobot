@@ -1,5 +1,6 @@
 // the ultra sonic sensor needs 5V to work, we can connect its VCC to the Vin pin of the nodemcu motor shield
-#include "distance_sensor.h"
+
+// #include "distance_sensor.h"
 
 namespace Roach {
 class DistanceSensor: public DistanceSensorDriver {
@@ -36,5 +37,3 @@ class DistanceSensor: public DistanceSensorDriver {
     int echo_pin;
 };
 };
-
-

@@ -23,7 +23,7 @@ void callback(char *topic, byte *payload, unsigned int length);
 WiFiClient espClient;
 // PubSubClient client(espClient);
 PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
-
+/*
 // enable one of the motor shields below
 //#define ENABLE_ADAFRUIT_MOTOR_DRIVER
 #ifdef ENABLE_ADAFRUIT_MOTOR_DRIVER
@@ -40,6 +40,7 @@ PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
 #define LEFT_MOTOR_INIT D3, D1, D2  // A+ and A- pwm:D1, direction: D3
 #define RIGHT_MOTOR_INIT D5, D6, D7 // B+ and B-
 #endif
+*/
 
 #define ENABLE_NODEMCU_V1_MOTOR_DRIVER
 #ifdef ENABLE_NODEMCU_V1_MOTOR_DRIVER
@@ -51,6 +52,7 @@ PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
 #endif
 
 #include "nodemcu_ultrasonic_sensor.h"
+
 const int trigPin = D6; //D4
 const int echoPin = D8; //D3
 #define MAX_DISTANCE 200
