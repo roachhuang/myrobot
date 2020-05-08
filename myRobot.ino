@@ -317,7 +317,7 @@ void setup()
   // Set callback
   chipId = ESP.getChipId();
   mac = String(chipId);
-  if (client.connect(mac.c_str(), "roach", "0206@tw") {
+  if (client.connect(mac.c_str(), "roach", "0206@tw")) {
     log("mqtt connected");
     client.publish("outTopic", "i'm the follower");
     client.subscribe("action");
