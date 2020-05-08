@@ -9,6 +9,7 @@
  * @brief Motor device driver for the Adafruit motor shield.
  * @author Miguel Grinberg
  */
+/*
 #include <AFMotor.h>
 #include "motor_driver.h"
 
@@ -17,10 +18,7 @@ namespace Roach
     class Motor : public MotorDriver
     {
     public:
-        /*
-         * @brief Class constructor.
-         * @param number the DC motor number to control, from 1 to 4.
-         */
+       
         Motor(int number)
             :MotorDriver(), motor(number), currentSpeed(0)
         {
@@ -53,3 +51,4 @@ namespace Roach
     };
 };
 
+*/

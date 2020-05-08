@@ -27,9 +27,18 @@ PubSubClient client(mqtt_server, mqtt_port, callback, espClient);
 // enable one of the motor shields below
 //#define ENABLE_ADAFRUIT_MOTOR_DRIVER
 #ifdef ENABLE_ADAFRUIT_MOTOR_DRIVER
-#include "adafruit_motor_driver.h"
+// #include "adafruit_motor_driver.h"
 #define LEFT_MOTOR_INIT 3 // M3 and M4
 #define RIGHT_MOTOR_INIT 4
+#endif
+
+// #define ENABLE_L298N_MOTOR_DRIVER
+#ifdef ENABLE_L298N_MOTOR_DRIVER
+#include "l298n_motor_driver.h"
+// #define LEFT_MOTOR_INIT D1, D3  // A+ and A- pwm:D1, direction: D3
+// #define RIGHT_MOTOR_INIT D2, D4 // B+ and B-
+#define LEFT_MOTOR_INIT D3, D1, D2  // A+ and A- pwm:D1, direction: D3
+#define RIGHT_MOTOR_INIT D5, D6, D7 // B+ and B-
 #endif
 
 #define ENABLE_NODEMCU_V1_MOTOR_DRIVER
@@ -68,7 +77,7 @@ void right(void);
 void backward(void);
 
 bool selfDriving = false; // default manual mode
-int motorSpeed = 150;
+int motorSpeed = MAX_SPEED;
 uint8_t maxDist2Wall = 8; // 3cm.
 int fsmDelay = 50;        // default 20ms
 
@@ -213,17 +222,29 @@ void moveCar(byte* payload, unsigned int length)
 // Handles message arrived on subscribed topic(s)
 void callback(char* topic, byte* payload, unsigned int length)
 {
-  uint8_t direction = 0;
+  uint8_t params[length], direction = 0, from =0, idx=0,  i;
   String command;
   log("Message arrived [");
   log(topic);
   log("] ");
-  for (int i = 0; i < length; i++) {
+  for (i = 0; i < length; i++) {
     //Serial.print((char)payload[i]);
     command += (char)payload[i];
   }
-  direction = command.toInt();
+   // 2 input params
+  // log("Robot params");
+  idx = command.indexOf(",");
+  for (i = 0; i < length; i++)
+  {
+    params[i] = command.substring(from, idx).toInt();
+    from = idx + 1;
+    idx = command.indexOf(",", from);
+  }
 
+  motorSpeed = params[0];
+  log("speed: %d\n", motorSpeed);
+  direction = params[1];
+  log("dir: %d\n", direction);
   // Handle
   // moveCar(payload, length);
   switch (direction)
@@ -256,7 +277,7 @@ void setup()
   const int mqtt_port = 1883;
   String mac, topic, topicLevel0 = "moveCar";
   uint32_t chipId;
-  
+
   // prepare Motor Output Pins
   Serial.begin(115200); // set up Serial library at 115200 bps
 
@@ -312,6 +333,10 @@ void setup()
 
 void loop()
 {
+  //forward();
+  //delay(2000);
+  //stop();
+  //delay(2000);
   uint8_t input;
   unsigned long currentTime = millis();
   unsigned long elapsedTime = currentTime - startTime;
@@ -320,7 +345,7 @@ void loop()
     //reconnect();
     log("disconnected!!!");
   }
-*/  
+*/
   client.loop();
 
   if (selfDriving == true)

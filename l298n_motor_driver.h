@@ -1,41 +1,42 @@
+#include <L298N.h>
 #include "motor_driver.h"
 
-namespace Roach {
-class Motor : public MotorDriver {
-  public:
-    /*
-       @brief Class constructor.
-       @param number the DC motor number to control, from 1 to 4.
-    */
-    Motor(int PinA, int PinB)
-      : MotorDriver(), currentSpeed(0)
+namespace Roach
+{
+    class Motor : public MotorDriver
     {
-      In1Or3 = PinA;
-      In2Or4 = PinB;
-      pinMode(In1Or3, OUTPUT);  // left or right motor 
-      pinMode(In2Or4, OUTPUT);     // In2 or In4
-      // digitalWrite(dir, HIGH);
-    }
+    public:
+        Motor(uint8_t EN, uint8_t IN1, uint8_t IN2)
+            :MotorDriver(), motor(EN, IN1, IN2), currentSpeed(0)
+        {
+        }
 
-    void setSpeed(int speed) {
-      if (speed >= 0) {
-        digitalWrite(In1Or3, HIGH);
-        digitalWrite(In2Or4, LOW);
-      } else {
-        digitalWrite(In1Or3, LOW);
-        digitalWrite(In1Or3, HIGH);
-      }
-    }
+        void setSpeed(int speed)
+        {
+            currentSpeed = speed;
+            if (speed == 0){
+              motor.stop();
+            }
+            else if (speed > 0) {
+                motor.setSpeed(speed);
+                motor.forward();
+            }
+            else {
+                motor.setSpeed(-speed);
+                motor.backward();
+            }
+        }
 
-    int getSpeed() const
-    {
-      return currentSpeed;
-    }
+        int getSpeed() const
+        {
+            return currentSpeed;
+        }
 
-  private:
-    uint8_t In1Or3;
-    uint8_t In2Or4;
-    int currentSpeed;
+    private:
+        // uint8_t EN;
+        // unit8_t IN1;
+        // uint8_t IN2;
+        L298N motor;
+        int currentSpeed;
+    };
 };
-};
-
