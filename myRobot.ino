@@ -243,7 +243,8 @@ void callback(char* topic, byte* payload, unsigned int length)
     idx = command.indexOf(",", from);
   }
 
-  motorSpeed = params[0];
+  // motorSpeed = params[0];
+  motorSpeed = 250;
   log("speed: %d\n", motorSpeed);
   direction = params[1];
   log("dir: %d\n", direction);
@@ -254,16 +255,16 @@ void callback(char* topic, byte* payload, unsigned int length)
     case 0:
       stop();
       break;
-    case 1:
+    case 3:
       forward();
       break;
-    case 2:
+    case 4:
       backward();
       break;
-    case 3:
+    case 1:
       left();
       break;
-    case 4:
+    case 2:
       right();
       break;
 
