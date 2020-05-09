@@ -279,7 +279,7 @@ void setup()
   mac = String(chipId);
   log(mac.c_str());
   // Attempt to connect
- if (client.connect(mac.c_str(), "roach", "0206@tw")) {
+ if (client.connect(mac.c_str(), "roach", "0206@tw")) 
   {
     log("mqtt connected");
     // Once connected, publish an announcement, and resubscribe
