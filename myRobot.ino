@@ -279,7 +279,7 @@ void setup()
   mac = String(chipId);
   log(mac.c_str());
   // Attempt to connect
- if (client.connect(mac.c_str(), "roach", "0206@tw")) 
+ if (client.connect(mac.c_str(), "roach", "0206@tw"))
   {
     log("mqtt connected");
     // Once connected, publish an announcement, and resubscribe
@@ -329,7 +329,7 @@ void forward(void)
 {
   String s;
   s = String(motorSpeed, DEC)+",1";
-  
+
   log("motorSpeed: %u\n", motorSpeed);
   log("forward");
   rightMotor.setSpeed(motorSpeed);
@@ -340,7 +340,7 @@ void backward(void)
 {
   String s;
   s = String(motorSpeed, DEC)+",2";
-  
+
   log("backward");
   client.publish("action", s.c_str());
   rightMotor.setSpeed(-motorSpeed);
@@ -351,7 +351,7 @@ void right(void)
 {
   String s;
   s = String(motorSpeed, DEC)+",4";
-  
+  log(s.c_str());
   log("right");
   rightMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
   leftMotor.setSpeed(-motorSpeed * 0.8);
@@ -361,8 +361,8 @@ void right(void)
 void left(void)
 {
   String s;
-  s = String(motorSpeed, DEC)+",1";
-  
+  s = String(motorSpeed, DEC)+",3";
+
   log("left");
   rightMotor.setSpeed(-motorSpeed * 0.8);
   leftMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
