@@ -10,6 +10,7 @@
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 // enable one of the motor shields below
 //#define ENABLE_ADAFRUIT_MOTOR_DRIVER
@@ -49,8 +50,8 @@ unsigned long startTime;
 #define irRight D7 // A2
 
 // Declare functions to be exposed to the API
-  void moveCar(byte *, unsigned int );
-  void callback(char *topic, byte *payload, unsigned int length);
+void moveCar(byte *, unsigned int);
+void callback(char *topic, byte *payload, unsigned int length);
 
 void stop(void);
 void forward(void);
@@ -58,7 +59,7 @@ void left(void);
 void right(void);
 void backward(void);
 
-bool selfDriving = false; // default manual mode
+bool autoPilot = false; // default manual mode
 int motorSpeed = 150;
 uint8_t maxDist2Wall = 8; // 3cm.
 int fsmDelay = 50;        // default 20ms
@@ -112,6 +113,7 @@ void moveCar(byte *payload, unsigned int length)
 {
   uint8_t params[length], i = 0, from = 0, idx = 0;
   uint8_t direction = 0;
+  /*
   String command;
   // convert byte (unsidned char) to String
   // String command((const __FlashStringHelper*) payload);
@@ -136,7 +138,15 @@ void moveCar(byte *payload, unsigned int length)
   // fsmDelay = params[2];
   direction = params[2];
   selfDriving = params[3];
-  if (selfDriving == false)
+  */
+
+  StaticJsonDocument<128> doc;
+  deserializeJson(doc, payload, length);
+  motorSpeed = doc["speed"];
+  direction = doc["dir"];
+  maxDist2Wall = doc["dist2Wall"];
+  autoPilot = doc["autopilot"];
+  if (autoPilot == false)
   {
     log("dir: %u\n", direction);
     switch (direction)
@@ -257,7 +267,7 @@ void loop()
 
   client.loop();
 
-  if (selfDriving == true)
+  if (autoPilot == true)
   {
     (fsm[s].cmdPtr)();
     input = irSensorInput(); // read sensors
