@@ -105,12 +105,13 @@ struct State
 typedef const struct State StateType;
 typedef StateType *StatePtr;
 StateType fsm[4] = {
-    {&forward, fsmDelay, {B, B, R, L, B, B, R, F}}, // Center
-    {&left, fsmDelay, {B, B, L, F, B, B, R, F}},    // off to the Left
-    {&right, fsmDelay, {B, B, R, L, B, B, F, F}},   // off to the Right state, we need to turn left
-    // {&backward, random(fsmDelay * 3, fsmDelay * 4), {B, B, L, L, B, B, R, R}}
-    // {&stop, fsmDelay, {S,S,S,S,S,S,S,S}}
-    {&backward, 60, {B, B, L, L, B, B, R, R}}};
+  {&forward, fsmDelay, {B, B, R, L, B, B, R, F}}, // Center
+  {&left, fsmDelay, {B, B, L, F, B, B, R, F}},    // off to the Left
+  {&right, fsmDelay, {B, B, R, L, B, B, F, F}},   // off to the Right state, we need to turn left
+  // {&backward, random(fsmDelay * 3, fsmDelay * 4), {B, B, L, L, B, B, R, R}}
+  // {&stop, fsmDelay, {S,S,S,S,S,S,S,S}}
+  {&backward, 60, {B, B, L, L, B, B, R, R}}
+};
 
 uint8_t irSensorInput()
 {
@@ -131,7 +132,7 @@ uint8_t irSensorInput()
 // Functions to control the robot
 
 /*
-void reconnect() {
+  void reconnect() {
   String mac, topic, topicLevel0 = "moveCar";
   uint32_t chipId;
   // Loop until we're reconnected
@@ -159,7 +160,7 @@ void reconnect() {
       delay(5000);
     }
   }
-}
+  }
 */
 
 void moveCar(byte *payload, unsigned int length)
@@ -171,62 +172,64 @@ void moveCar(byte *payload, unsigned int length)
   // String command((const __FlashStringHelper*) payload);
   //parsing payload from array to String
   /*
-  for (int i = 0; i < length; i++)
-  {
+    for (int i = 0; i < length; i++)
+    {
     //Serial.print((char)payload[i]);
     command += (char)payload[i];
-  }
-  // 3 input params
-  
-  idx = command.indexOf(",");
-  for (i = 0; i < length; i++)
-  {
+    }
+    // 3 input params
+
+    idx = command.indexOf(",");
+    for (i = 0; i < length; i++)
+    {
     params[i] = command.substring(from, idx).toInt();
     from = idx + 1;
     idx = command.indexOf(",", from);
-  }
+    }
 
-  motorSpeed = params[0];
-  maxDist2Wall = params[1];
-  // fsmDelay = params[2];
-  direction = params[2];
-  selfDriving = params[3];
+    motorSpeed = params[0];
+    maxDist2Wall = params[1];
+    // fsmDelay = params[2];
+    direction = params[2];
+    selfDriving = params[3];
   */
   StaticJsonDocument<128> doc;
   deserializeJson(doc, payload, length);
   motorSpeed = doc["speed"];
   direction = doc["dir"];
-  maxDist2Wall=doc["dist2Wall"]
-  autoPilot =doc["autopilot"]
+  maxDist2Wall = doc["dist2Wall"];
+  autoPilot = doc["autoPilot"];
   if (autoPilot == false)
   {
     log("dir: %u\n", direction);
     switch (direction)
     {
-    case 0:
-      stop();
-      break;
-    case 1:
-      forward();
-      break;
-    case 2:
-      backward();
-      break;
-    case 3:
-      left();
-      break;
-    case 4:
-      right();
-      break;
+      case 0:
+        stop();
+        break;
+      case 1:
+        forward();
+        break;
+      case 2:
+        backward();
+        break;
+      case 3:
+        left();
+        break;
+      case 4:
+        right();
+        break;
 
-    default:
-      stop();
-      break;
+      default:
+        stop();
+        break;
     }
   }
 
   log("speed: %u\n", motorSpeed);
   log("dir: %u\n", direction);
+  log("maxDist2Wall: %u\n", maxDist2Wall);
+  Serial.println(autoPilot? "TRUE": "FALSE");
   //log("delay: %u\n", fsmDelay);
 }
 // Handles message arrived on subscribed topic(s)
@@ -312,10 +315,10 @@ void loop()
   unsigned long currentTime = millis();
   unsigned long elapsedTime = currentTime - startTime;
   /*
-  if (!client.connected()) {
+    if (!client.connected()) {
     reconnect();
-  }
-*/
+    }
+  */
   client.loop();
 
   if (autoPilot == true)
