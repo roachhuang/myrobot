@@ -145,7 +145,7 @@ void moveCar(byte *payload, unsigned int length)
   motorSpeed = doc["speed"];
   direction = doc["dir"];
   maxDist2Wall = doc["dist2Wall"];
-  autoPilot = doc["autopilot"];
+  autoPilot = doc["autoPilot"];
   if (autoPilot == false)
   {
     log("dir: %u\n", direction);
@@ -175,7 +175,7 @@ void moveCar(byte *payload, unsigned int length)
 
   log("speed: %u\n", motorSpeed);
   log("dist: %u\n", maxDist2Wall);
-  log("delay: %u\n", fsmDelay);
+  // log("delay: %u\n", fsmDelay);
 }
 // Handles message arrived on subscribed topic(s)
 void callback(char *topic, byte *payload, unsigned int length)
