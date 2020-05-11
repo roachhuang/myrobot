@@ -10,6 +10,7 @@
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 void callback(char *topic, byte *payload, unsigned int length);
 
@@ -79,8 +80,8 @@ void left(void);
 void right(void);
 void backward(void);
 
-bool selfDriving = false; // default manual mode
-int motorSpeed = 150;
+bool autoPilot = false; // default manual mode
+int motorSpeed = 150; // need to be signed int coz neg value for backward.
 uint8_t maxDist2Wall = 8; // 3cm.
 int fsmDelay = 50;        // default 20ms
 
@@ -163,19 +164,20 @@ void reconnect() {
 
 void moveCar(byte *payload, unsigned int length)
 {
-  uint8_t params[length], i = 0, from = 0, idx = 0;
+  // uint8_t params[length], i = 0, from = 0, idx = 0;
   uint8_t direction = 0;
-  String command;
+  // String command;
   // convert byte (unsidned char) to String
   // String command((const __FlashStringHelper*) payload);
   //parsing payload from array to String
+  /*
   for (int i = 0; i < length; i++)
   {
     //Serial.print((char)payload[i]);
     command += (char)payload[i];
   }
   // 3 input params
-  log("Robot params");
+  
   idx = command.indexOf(",");
   for (i = 0; i < length; i++)
   {
@@ -189,7 +191,14 @@ void moveCar(byte *payload, unsigned int length)
   // fsmDelay = params[2];
   direction = params[2];
   selfDriving = params[3];
-  if (selfDriving == false)
+  */
+  StaticJsonDocument<128> doc;
+  deserializeJson(doc, payload, length);
+  motorSpeed = doc["speed"];
+  direction = doc["dir"];
+  maxDist2Wall=doc["dist2Wall"]
+  autoPilot =doc["autopilot"]
+  if (autoPilot == false)
   {
     log("dir: %u\n", direction);
     switch (direction)
@@ -217,8 +226,8 @@ void moveCar(byte *payload, unsigned int length)
   }
 
   log("speed: %u\n", motorSpeed);
-  log("dist: %u\n", maxDist2Wall);
-  log("delay: %u\n", fsmDelay);
+  log("dir: %u\n", direction);
+  //log("delay: %u\n", fsmDelay);
 }
 // Handles message arrived on subscribed topic(s)
 void callback(char *topic, byte *payload, unsigned int length)
@@ -279,7 +288,7 @@ void setup()
   mac = String(chipId);
   log(mac.c_str());
   // Attempt to connect
- if (client.connect(mac.c_str(), "roach", "0206@tw"))
+  if (client.connect(mac.c_str(), "roach", "0206@tw"))
   {
     log("mqtt connected");
     // Once connected, publish an announcement, and resubscribe
@@ -309,7 +318,7 @@ void loop()
 */
   client.loop();
 
-  if (selfDriving == true)
+  if (autoPilot == true)
   {
     (fsm[s].cmdPtr)();
     input = irSensorInput(); // read sensors
@@ -328,7 +337,7 @@ void loop()
 void forward(void)
 {
   String s;
-  s = String(motorSpeed, DEC)+",1";
+  s = String(motorSpeed, DEC) + ",1";
 
   log("motorSpeed: %u\n", motorSpeed);
   log("forward");
@@ -339,7 +348,7 @@ void forward(void)
 void backward(void)
 {
   String s;
-  s = String(motorSpeed, DEC)+",2";
+  s = String(motorSpeed, DEC) + ",2";
 
   log("backward");
   client.publish("action", s.c_str());
@@ -350,7 +359,7 @@ void backward(void)
 void right(void)
 {
   String s;
-  s = String(motorSpeed, DEC)+",4";
+  s = String(motorSpeed, DEC) + ",4";
   log(s.c_str());
   log("right");
   rightMotor.setSpeed(motorSpeed * 0.8); // make it turns slowly
@@ -361,7 +370,7 @@ void right(void)
 void left(void)
 {
   String s;
-  s = String(motorSpeed, DEC)+",3";
+  s = String(motorSpeed, DEC) + ",3";
 
   log("left");
   rightMotor.setSpeed(-motorSpeed * 0.8);
@@ -372,9 +381,9 @@ void left(void)
 void stop(void)
 {
   String s;
-  s = String(motorSpeed, DEC)+",0";
+  s = String(motorSpeed, DEC) + ",0";
   // log(command);
-  client.publish("action",s.c_str());
+  client.publish("action", s.c_str());
   rightMotor.setSpeed(0);
   leftMotor.setSpeed(0);
 }
