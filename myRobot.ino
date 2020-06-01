@@ -10,7 +10,7 @@
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>
-#include <ArduinoJson.h>
+#include <Arduino_JSON.h>
 
 void callback(char *topic, byte *payload, unsigned int length);
 
@@ -82,7 +82,7 @@ void backward(void);
 
 bool autoPilot = false; // default manual mode
 int motorSpeed = 150; // need to be signed int coz neg value for backward.
-uint8_t maxDist2Wall = 8; // 3cm.
+int maxDist2Wall = 8; // 3cm.
 int fsmDelay = 50;        // default 20ms
 
 enum state_t
@@ -163,38 +163,13 @@ uint8_t irSensorInput()
   }
 */
 
-void moveCar(byte *payload, unsigned int length)
+void moveCar(byte* payload, unsigned int length)
 {
-  // uint8_t params[length], i = 0, from = 0, idx = 0;
-  uint8_t direction = 0;
-  // String command;
-  // convert byte (unsidned char) to String
-  // String command((const __FlashStringHelper*) payload);
-  //parsing payload from array to String
-  /*
-    for (int i = 0; i < length; i++)
-    {
-    //Serial.print((char)payload[i]);
-    command += (char)payload[i];
-    }
-    // 3 input params
+  int direction = 0;
+  JSONVar doc = JSON.parse((const char*)payload);
 
-    idx = command.indexOf(",");
-    for (i = 0; i < length; i++)
-    {
-    params[i] = command.substring(from, idx).toInt();
-    from = idx + 1;
-    idx = command.indexOf(",", from);
-    }
-
-    motorSpeed = params[0];
-    maxDist2Wall = params[1];
-    // fsmDelay = params[2];
-    direction = params[2];
-    selfDriving = params[3];
-  */
-  StaticJsonDocument<128> doc;
-  deserializeJson(doc, payload, length);
+  // StaticJsonDocument<128> doc;
+  // deserializeJson(doc, payload, length);
   motorSpeed = doc["speed"];
   direction = doc["dir"];
   maxDist2Wall = doc["dist2Wall"];
@@ -229,6 +204,7 @@ void moveCar(byte *payload, unsigned int length)
   log("speed: %u\n", motorSpeed);
   log("dir: %u\n", direction);
   log("maxDist2Wall: %u\n", maxDist2Wall);
+  // log("autoPilot: %s\n", autoPilot);
   Serial.println(autoPilot? "TRUE": "FALSE");
   //log("delay: %u\n", fsmDelay);
 }
@@ -319,7 +295,7 @@ void loop()
     reconnect();
     }
   */
-  client.loop();
+  
 
   if (autoPilot == true)
   {
@@ -334,7 +310,8 @@ void loop()
       startTime = currentTime;
     }
   }
-  // delay(10);
+  delay(100);
+  client.loop();
 }
 
 void forward(void)
