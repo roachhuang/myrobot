@@ -10,16 +10,16 @@
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>
-#include <ArduinoJson.h>
+#include <Arduino_JSON.h>
 
-// enable one of the motor shields below
+/* enable one of the motor shields below
 //#define ENABLE_ADAFRUIT_MOTOR_DRIVER
 #ifdef ENABLE_ADAFRUIT_MOTOR_DRIVER
 #include "adafruit_motor_driver.h"
 #define LEFT_MOTOR_INIT 3 // M3 and M4
 #define RIGHT_MOTOR_INIT 4
 #endif
-
+*/
 #define ENABLE_NODEMCU_V1_MOTOR_DRIVER
 #ifdef ENABLE_NODEMCU_V1_MOTOR_DRIVER
 #include "nodemcu_v1_motor_driver.h"
@@ -61,7 +61,7 @@ void backward(void);
 
 bool autoPilot = false; // default manual mode
 int motorSpeed = 150;
-uint8_t maxDist2Wall = 8; // 3cm.
+int maxDist2Wall = 8; // 3cm.
 int fsmDelay = 50;        // default 20ms
 
 enum state_t
@@ -95,7 +95,7 @@ uint8_t irSensorInput()
 {
   uint8_t irL0, irL1, irR0, center;
   int irR1;
-  center = (dSensor.getDistance()) < maxDist2Wall ? 0 : 1; // distance to center < 8cm
+  center = (dSensor.getDistance()) < (byte)maxDist2Wall ? 0 : 1; // distance to center < 8cm
   irL0 = digitalRead(irLeft);
   irL1 = digitalRead(LED_BUILTIN) && irL0;
 
@@ -111,8 +111,8 @@ uint8_t irSensorInput()
 // Functions to control the robot
 void moveCar(byte *payload, unsigned int length)
 {
-  uint8_t params[length], i = 0, from = 0, idx = 0;
-  uint8_t direction = 0;
+  // uint8_t params[length], i = 0, from = 0, idx = 0;
+  int direction = 0;
   /*
   String command;
   // convert byte (unsidned char) to String
@@ -140,8 +140,11 @@ void moveCar(byte *payload, unsigned int length)
   selfDriving = params[3];
   */
 
-  StaticJsonDocument<128> doc;
-  deserializeJson(doc, payload, length);
+  JSONVar doc = JSON.parse((const char*)payload);
+  motorSpeed = doc["speed"];
+  direction = doc["dir"];
+  maxDist2Wall = doc["dist2Wall"];
+  autoPilot = doc["autoPilot"];
   motorSpeed = doc["speed"];
   direction = doc["dir"];
   maxDist2Wall = doc["dist2Wall"];
